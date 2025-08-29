@@ -1,11 +1,12 @@
 ﻿const { Client, LocalAuth } = require('whatsapp-web.js'); // 🔑 LocalAuth
 const qrcode = require('qrcode-terminal');
+const puppeteer = require('puppeteer'); // usamos puppeteer normal
 
 // Configuración del cliente con sesión persistente
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        headless: true, // Chromium por defecto
+        headless: true,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -37,7 +38,7 @@ client.on('ready', () => {
     console.log('✅ Cliente listo');
 });
 
-// Función que devuelve el mensaje según la opción
+// Función que devuelve el mensaje según la opción (tus textos originales)
 function obtenerMensaje(opcion) {
     switch (opcion) {
         case '1':
