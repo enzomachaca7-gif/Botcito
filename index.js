@@ -1,13 +1,11 @@
 ﻿const { Client, LocalAuth } = require('whatsapp-web.js'); // 🔑 LocalAuth
 const qrcode = require('qrcode-terminal');
-const puppeteer = require('puppeteer-core');
 
 // Configuración del cliente con sesión persistente
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome-stable', // Chrome en Railway
-        headless: true,
+        headless: true, // Chromium por defecto
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -59,18 +57,15 @@ function obtenerMensaje(opcion) {
 client.on('message', message => {
     const chatId = message.from;
 
-    // Inicializamos contador y registro si no existen
     if (!usuarioContador[chatId]) usuarioContador[chatId] = 0;
     if (!usuarioOpcionesRespondidas[chatId]) usuarioOpcionesRespondidas[chatId] = new Set();
 
-    // Solo procesamos si el usuario no superó los intentos
     if (usuarioContador[chatId] < MAX_INTENTOS) {
-        const texto = message.body.replace(/\s+/g, ''); // eliminamos espacios
+        const texto = message.body.replace(/\s+/g, '');
         const partes = texto.split(/[, -]/).map(op => op.trim());
 
         partes.forEach(parte => {
             parte.split('').forEach(opcion => {
-                // Solo enviamos si esta opción aún no fue respondida
                 if (!usuarioOpcionesRespondidas[chatId].has(opcion)) {
                     const mensaje = obtenerMensaje(opcion);
                     if (mensaje) {
@@ -81,7 +76,6 @@ client.on('message', message => {
             });
         });
 
-        // Incrementamos contador de mensajes automáticos
         usuarioContador[chatId]++;
         console.log(`Usuario ${chatId} ha recibido ${usuarioContador[chatId]} mensajes automáticos. Opciones respondidas: ${Array.from(usuarioOpcionesRespondidas[chatId]).join(',')}`);
     } else {
