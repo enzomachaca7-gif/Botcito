@@ -1,8 +1,7 @@
-﻿const { Client, LocalAuth } = require('whatsapp-web.js'); // 🔑 LocalAuth
+﻿const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const puppeteer = require('puppeteer'); // usamos puppeteer normal
+const puppeteer = require('puppeteer'); // 👈 Importante usar puppeteer
 
-// Configuración del cliente con sesión persistente
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -20,25 +19,19 @@ const client = new Client({
     }
 });
 
-// Contador de mensajes automáticos por usuario
-const usuarioContador = {}; // { chatId: 0 }
-// Registro de opciones ya respondidas por usuario
-const usuarioOpcionesRespondidas = {}; // { chatId: Set(['1','2']) }
-
+const usuarioContador = {};
+const usuarioOpcionesRespondidas = {};
 const MAX_INTENTOS = 2;
 
-// Evento para generar QR la primera vez
 client.on('qr', qr => {
     console.log('Escanea este QR con tu WhatsApp:');
     qrcode.generate(qr, { small: true });
 });
 
-// Evento cuando el cliente está listo
 client.on('ready', () => {
     console.log('✅ Cliente listo');
 });
 
-// Función que devuelve el mensaje según la opción (tus textos originales)
 function obtenerMensaje(opcion) {
     switch (opcion) {
         case '1':
@@ -54,10 +47,8 @@ function obtenerMensaje(opcion) {
     }
 }
 
-// Evento al recibir un mensaje
 client.on('message', message => {
     const chatId = message.from;
-
     if (!usuarioContador[chatId]) usuarioContador[chatId] = 0;
     if (!usuarioOpcionesRespondidas[chatId]) usuarioOpcionesRespondidas[chatId] = new Set();
 
@@ -84,5 +75,4 @@ client.on('message', message => {
     }
 });
 
-// Inicializamos el cliente
 client.initialize();
