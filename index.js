@@ -1,9 +1,24 @@
-﻿const { Client, LocalAuth } = require('whatsapp-web.js'); // 🔑 Agregamos LocalAuth
+﻿const { Client, LocalAuth } = require('whatsapp-web.js'); // 🔑 LocalAuth
 const qrcode = require('qrcode-terminal');
+const puppeteer = require('puppeteer-core');
 
 // Configuración del cliente con sesión persistente
 const client = new Client({
-    authStrategy: new LocalAuth()
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome-stable', // Chrome en Railway
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+        ]
+    }
 });
 
 // Contador de mensajes automáticos por usuario
@@ -15,12 +30,13 @@ const MAX_INTENTOS = 2;
 
 // Evento para generar QR la primera vez
 client.on('qr', qr => {
+    console.log('Escanea este QR con tu WhatsApp:');
     qrcode.generate(qr, { small: true });
 });
 
 // Evento cuando el cliente está listo
 client.on('ready', () => {
-    console.log('Cliente listo!');
+    console.log('✅ Cliente listo');
 });
 
 // Función que devuelve el mensaje según la opción
