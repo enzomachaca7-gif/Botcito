@@ -1,7 +1,14 @@
 ﻿const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode'); // QR en Base64
+const express = require('express');
 const puppeteer = require('puppeteer'); // 👈 Importante usar puppeteer
 
+// --- Servidor Express para mostrar QR ---
+const app = express();
+const port = 3000;
+let qrImage = null; // QR en Base64
+
+// --- Configuración del cliente WhatsApp ---
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -19,19 +26,31 @@ const client = new Client({
     }
 });
 
+// Contadores y control de mensajes
 const usuarioContador = {};
 const usuarioOpcionesRespondidas = {};
 const MAX_INTENTOS = 2;
 
-client.on('qr', qr => {
-    console.log('Escanea este QR con tu WhatsApp:');
-    qrcode.generate(qr, { small: true });
+// --- Evento QR ---
+client.on('qr', async qr => {
+    console.log('Escanea este QR con tu WhatsApp (consola opcional):');
+
+    // QR en consola
+    qrcode.toString(qr, { type: 'terminal' }, (err, url) => {
+        if (err) console.error(err);
+        console.log(url);
+    });
+
+    // QR en Base64 para navegador
+    qrImage = await qrcode.toDataURL(qr);
 });
 
+// --- Cliente listo ---
 client.on('ready', () => {
     console.log('✅ Cliente listo');
 });
 
+// --- Función para mensajes automáticos ---
 function obtenerMensaje(opcion) {
     switch (opcion) {
         case '1':
@@ -47,6 +66,7 @@ function obtenerMensaje(opcion) {
     }
 }
 
+// --- Evento mensaje ---
 client.on('message', message => {
     const chatId = message.from;
     if (!usuarioContador[chatId]) usuarioContador[chatId] = 0;
@@ -75,4 +95,13 @@ client.on('message', message => {
     }
 });
 
+// --- Servidor para mostrar QR ---
+app.get('/', (req, res) => {
+    if (!qrImage) return res.send('QR aún no generado. Esperá un momento...');
+    res.send(`<img src="${qrImage}" style="width:300px;height:300px;" />`);
+});
+
+app.listen(port, () => console.log(`Servidor corriendo en http://localhost:${port}`));
+
+// --- Inicializamos cliente WhatsApp ---
 client.initialize();
